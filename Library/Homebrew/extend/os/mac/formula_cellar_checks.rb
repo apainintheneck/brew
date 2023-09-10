@@ -29,8 +29,7 @@ module FormulaCellarChecks
   def check_openssl_links
     return unless formula.prefix.directory?
 
-    keg = Keg.new(formula.prefix)
-    system_openssl = keg.mach_o_files.select do |obj|
+    system_openssl = binary_executable_or_library_files.select do |obj|
       dlls = obj.dynamically_linked_libraries
       dlls.any? { |dll| %r{/usr/lib/lib(crypto|ssl|tls)\..*dylib}.match dll }
     end
@@ -92,8 +91,7 @@ module FormulaCellarChecks
     return unless formula.prefix.directory?
     return if formula.tap.present? && formula.tap.audit_exception(:flat_namespace_allowlist, formula.name)
 
-    keg = Keg.new(formula.prefix)
-    flat_namespace_files = keg.mach_o_files.reject do |file|
+    flat_namespace_files = binary_executable_or_library_files.reject do |file|
       next true unless file.dylib?
 
       macho = MachO.open(file)

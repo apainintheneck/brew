@@ -14,6 +14,11 @@ module FormulaCellarChecks
   sig { abstract.returns(Formula) }
   def formula; end
 
+  def binary_executable_or_library_files
+    @binary_executable_or_library_files ||= Keg.new(formula.prefix)
+                                               .binary_executable_or_library_files
+  end
+
   sig { abstract.params(output: T.nilable(String)).void }
   def problem_if_output(output); end
 
@@ -319,8 +324,7 @@ module FormulaCellarChecks
       EOS
     end
 
-    keg = Keg.new(formula.prefix)
-    return if keg.binary_executable_or_library_files.any? do |file|
+    return if binary_executable_or_library_files.any? do |file|
       cpuid_instruction?(file, objdump)
     end
 
@@ -330,9 +334,8 @@ module FormulaCellarChecks
   def check_binary_arches(formula)
     return unless formula.prefix.directory?
 
-    keg = Keg.new(formula.prefix)
     mismatches = {}
-    keg.binary_executable_or_library_files.each do |file|
+    binary_executable_or_library_files.each do |file|
       farch = file.arch
       mismatches[file] = farch if farch != Hardware::CPU.arch
     end
